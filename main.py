@@ -1,19 +1,21 @@
 import numpy as np
+# import sheet as sheet
 from matplotlib import pyplot as plt
 import cv2
 import io
 import time
+import xlwt
 
 # Camera stream
 cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1280)
-cap.set(cv2.CAP_PROP_FPS, 30)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+cap.set(cv2.CAP_PROP_FPS, 60)
 # Video stream (optional)
 # cap = cv2.VideoCapture("videoplayback.mp4")
 
 # Image crop
-x, y, w, h = 800, 500, 100, 100
+x, y, w, h = 700, 500, 100, 100
 heartbeat_count = 128
 colorRatio_count = 128
 heartbeat_values = [0]*heartbeat_count
@@ -23,6 +25,9 @@ heartbeat_times = [time.time()]*heartbeat_count
 # Matplotlib graph surface
 fig = plt.figure()
 ax = fig.add_subplot(111)
+
+# book = xlwt.Workbook()
+# sh = book.add_sheet(sheet)
 
 while(True):
     # Capture frame-by-frame
@@ -40,6 +45,9 @@ while(True):
     colorRatio = colorRatio[1:] + [redIntense/greenIntense]
     heartbeat_times = heartbeat_times[1:] + [time.time()]
 
+    # sh.write(colorRatio)
+    #
+    # book.save("C:\Users\user\Desktop\mest.xlsx")
 
 
     # Draw matplotlib graph to numpy array
