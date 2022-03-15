@@ -13,6 +13,7 @@ import os
 import pandas as pd
 import io
 import time
+from scipy.signal import find_peaks
 
 def print_hi(name):
     # Use a breakpoint in the code line below to debug your script.
@@ -38,17 +39,18 @@ def startMeasurenent():
     #                                       100000000, 180500000, 105000000]})
     # df.to_excel(outputFile)
     # Camera stream
+    fps = 60
     cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-    cap.set(cv2.CAP_PROP_FPS, 60)
+    cap.set(cv2.CAP_PROP_FPS, fps)
     # Video stream (optional)
     # cap = cv2.VideoCapture("videoplayback.mp4")
 
     # Image crop
     x, y, w, h = 700, 500, 100, 100
-    heartbeat_count = 128
-    colorRatio_count = 128
+    heartbeat_count = 300
+    colorRatio_count = 300
     heartbeat_values = [0] * heartbeat_count
     colorRatio = [0] * colorRatio_count
     heartbeat_times = [time.time()] * heartbeat_count
@@ -59,7 +61,9 @@ def startMeasurenent():
 
     f = open(outputFile, 'w', newline='')
     writer = csv.writer(f)
-
+    frameNumber = 0
+    testLength = 50
+    times = np.linspace(0, 1, testLength)
     while (True):
         # Capture frame-by-frame
         ret, frame = cap.read()
@@ -76,6 +80,18 @@ def startMeasurenent():
         colorRatio = colorRatio[1:] + [redIntense / greenIntense]
         colorRatio2log = [redIntense / greenIntense]
         heartbeat_times = heartbeat_times[1:] + [time.time()]
+        frameNumber += 1
+        print(frameNumber)
+
+        if frameNumber % testLength == 0:
+            print('It is a time!')
+            pulses = colorRatio[:-testLength-1:-1]
+            print(len(pulses))
+            peaks = find_peaks(pulses, height=0)
+            peak_pos = times[peaks[0]]
+            print(peak_pos)
+            HR = len(peak_pos)/testLength
+            print(HR)
 
         writer.writerow(colorRatio2log)
 
@@ -117,7 +133,7 @@ if __name__ == '__main__':
     text0 = Text(width=100, height=1)
     text0.grid(column=2, row=0)
 
-    btn1 = Button(window, text="Выбрать", command=startMeasurenent)
+    btn1 = Button(window, text="Start!", command=startMeasurenent)
     btn1.grid(column=1, row=1)
     btn0 = Button(window, text="Выбрать", command=selectOutputDir)
     btn0.grid(column=1, row=0)
