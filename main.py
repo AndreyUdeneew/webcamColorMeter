@@ -40,6 +40,7 @@ def startMeasurenent():
     # df.to_excel(outputFile)
     # Camera stream
     fps = 60
+    real_time_4_HR_counting = 5
     cap = cv2.VideoCapture(0)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
@@ -49,8 +50,8 @@ def startMeasurenent():
 
     # Image crop
     x, y, w, h = 700, 500, 100, 100
-    heartbeat_count = 300
-    colorRatio_count = 300
+    heartbeat_count = fps * real_time_4_HR_counting
+    colorRatio_count = fps * real_time_4_HR_counting
     heartbeat_values = [0] * heartbeat_count
     colorRatio = [0] * colorRatio_count
     heartbeat_times = [time.time()] * heartbeat_count
@@ -63,7 +64,7 @@ def startMeasurenent():
     writer = csv.writer(f)
     frameNumber = 0
     testLength = 50
-    times = np.linspace(0, 1, testLength)
+    times = np.linspace(0, 1, heartbeat_count)
     while (True):
         # Capture frame-by-frame
         ret, frame = cap.read()
@@ -83,15 +84,18 @@ def startMeasurenent():
         frameNumber += 1
         print(frameNumber)
 
-        if frameNumber % testLength == 0:
+        if frameNumber % heartbeat_count == 0:
             print('It is a time!')
-            pulses = colorRatio[:-testLength-1:-1]
+            pulses = colorRatio[:-heartbeat_count-1:-1]
             print(len(pulses))
             peaks = find_peaks(pulses, height=0)
             peak_pos = times[peaks[0]]
             print(peak_pos)
-            HR = len(peak_pos)/testLength
+            HR = len(peak_pos)/heartbeat_count
+            print(len(peak_pos))
             print(HR)
+            text1.delete("1.0","end")
+            text1.insert(INSERT, HR)
 
         writer.writerow(colorRatio2log)
 
@@ -104,10 +108,10 @@ def startMeasurenent():
         plt.cla()
 
         # Display the frames
-        cv2.imshow('Crop', crop_img)
+        # cv2.imshow('Crop', crop_img)
         cv2.imshow('Graph', plot_img_np)
-        cv2.imshow('Red', crop_img[:, :, 0])
-        cv2.imshow('Green', crop_img[:, :, 1])
+        # cv2.imshow('Red', crop_img[:, :, 0])
+        # cv2.imshow('Green', crop_img[:, :, 1])
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
     f.close()
@@ -119,18 +123,20 @@ def startMeasurenent():
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     window = Tk()
-    window.geometry('1100x60')
+    window.geometry('1200x60')
     window.title("flashFiller")
 
     lbl1 = Label(window, text="Начать измерение")
     lbl1.grid(column=0, row=1)
     lbl0 = Label(window, text="Выбор директории выходного файла")
     lbl0.grid(column=0, row=0)
+    lbl2 = Label(window, text="HR =")
+    lbl2.grid(column=2, row=1)
 
     text1 = Text(width=7, height=1)
-    text1.grid(column=2, row=1, sticky=(W))
+    text1.grid(column=3, row=1, sticky=(W))
     # text0.pack()
-    text0 = Text(width=100, height=1)
+    text0 = Text(width=7, height=1)
     text0.grid(column=2, row=0)
 
     btn1 = Button(window, text="Start!", command=startMeasurenent)
